@@ -1,12 +1,12 @@
 export const chatHandler = async (request, env) => {
 	let model = '@cf/mistral/mistral-7b-instruct-v0.1';
 	let messages = [];
+	let image = null;
 	let error = null;
 
 	// get the current time in epoch seconds
 	const created = Math.floor(Date.now() / 1000);
 	const uuid = crypto.randomUUID();
-
 	try {
 		// If the POST data is JSON then attach it to our response.
 		if (request.headers.get('Content-Type') === 'application/json') {
@@ -21,7 +21,34 @@ export const chatHandler = async (request, env) => {
 					if (json.messages.length === 0) {
 						return Response.json({ error: 'no messages provided' }, { status: 400 });
 					}
-					messages = json.messages;
+					
+					//Hard code to support vision models 
+					for (let i = 0; i < json.messages.length; i++) {
+						const temp = json.messages[i];
+						const content = temp["content"];
+						
+						if (!Array.isArray(content)) {
+							messages.push(temp);
+						} else {
+							let c = "";
+
+							for (let j = 0; j < content.length; j++) {
+								if (content[j].image_url != null) { //this is image
+									console.log("This message contain image!!!!");
+									image = content[j].image_url.url;
+								} else {
+									c = content[j].text;
+								}
+							}
+
+							messages.push({
+								"role": temp["role"],
+								"content": c
+							})
+						}
+					}
+
+					// messages = json.messages;
 				}
 			}
 			if (!json?.stream) json.stream = false;
@@ -84,7 +111,7 @@ export const chatHandler = async (request, env) => {
 			});
 
 			// for now, nothing else does anything. Load the ai model.
-			const aiResp = await env.AI.run(model, { stream: json.stream, messages });
+			const aiResp = await env.AI.run(model, { stream: json.stream, messages, image: convertBase64ToBlob(image) });
 			// Piping the readableStream through the transformStream
 			return json.stream ? new Response(aiResp.pipeThrough(transformer), {
 				headers: {
@@ -126,3 +153,30 @@ export const chatHandler = async (request, env) => {
 	// if we get here, return a 400 error
 	return Response.json({ error: 'invalid request' }, { status: 400 });
 };
+
+/**
+ * Convert BASE64 to BLOB
+ * @param base64Image Pass Base64 image data to convert into the BLOB
+ */
+function convertBase64ToBlob(base64Image) {
+	// Split into two parts
+	const parts = base64Image.split(';base64,');
+  
+	// Hold the content type
+	const imageType = parts[0].split(':')[1];
+  
+	// Decode Base64 string
+	const decodedData = atob(parts[1]);
+  
+	// Create UNIT8ARRAY of size same as row data length
+	const uInt8Array = new Uint8Array(decodedData.length);
+  
+	// Insert all character code into uInt8Array
+	for (let i = 0; i < decodedData.length; ++i) {
+	  uInt8Array[i] = decodedData.charCodeAt(i);
+	}
+  
+	// Return BLOB image after conversion
+	// return new Blob([uInt8Array], { type: imageType });
+	return Array.from(uInt8Array);
+  }

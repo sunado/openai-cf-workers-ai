@@ -1,4 +1,4 @@
-name = "openai-cf"                # todo
+name = "the-relay-susu"                # todo
 main = "index.js"
 compatibility_date = "2024-05-06"
 
@@ -11,5 +11,11 @@ bucket_name = "openai-cf-images"
 preview_bucket_name = "ai-images"
 
 [vars]
-CLOUDFLARE_ACCOUNT_ID = "c8c30db3dddc4ad31065d336368c7905" # replace with your own.
+CLOUDFLARE_ACCOUNT_ID = "TODO" # replace with your own.
+CLOUDFLARE_API_TOKEN = "TODO"
+ACCESS_TOKEN = "TODO"
 # MODEL_MAPPER = { "gpt-3.5-turbo" = "@cf/meta/llama-2-7b-chat-int8" } # Optional
+
+[observability]
+enabled = true
+head_sampling_rate = 1 # optional. default = 1.

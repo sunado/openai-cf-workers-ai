@@ -111,7 +111,15 @@ export const chatHandler = async (request, env) => {
 			});
 
 			// for now, nothing else does anything. Load the ai model.
-			const aiResp = await env.AI.run(model, { stream: json.stream, messages, image: convertBase64ToBlob(image) });
+
+			let obj = {};
+			if (image) {
+				obj = { stream: json.stream, messages, image: convertBase64ToBlob(image) };
+			} else {
+				obj = { stream: json.stream, messages };
+			}
+
+			const aiResp = await env.AI.run(model, obj );
 			// Piping the readableStream through the transformStream
 			return json.stream ? new Response(aiResp.pipeThrough(transformer), {
 				headers: {

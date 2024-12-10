@@ -4,7 +4,7 @@ import { streamToBuffer } from '../utils/stream';
 
 export const imageGenerationHandler = async (request, env) => {
     let model = '@cf/stabilityai/stable-diffusion-xl-base-1.0';
-    let format = 'url';
+    let format = 'b64_json';
     let error = null;
     let created = Math.floor(Date.now() / 1000);
     try {
@@ -26,7 +26,7 @@ export const imageGenerationHandler = async (request, env) => {
 
             const respStream = await env.AI.run(model, inputs); // Get the response stream
             const respBuffer = await streamToBuffer(respStream); // Buffer the stream into memory
-
+            console.log("Format: " + format);
             if (format === 'b64_json') {
                 const b64_json = uint8ArrayToBase64(respBuffer);
                 return new Response(JSON.stringify({
@@ -54,6 +54,7 @@ export const imageGenerationHandler = async (request, env) => {
             }
         }
     } catch (e) {
+        console.log("error" + e);
         error = e;
     }
 

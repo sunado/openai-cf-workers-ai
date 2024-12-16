@@ -1,4 +1,4 @@
-import { Router, createCors, error, json } from 'itty-router';
+import { cors, Router, error, json, withParams } from 'itty-router';
 
 // import the routes
 import { chatHandler } from './routes/chat';
@@ -8,10 +8,15 @@ import { transcriptionHandler, translationHandler } from './routes/audio';
 import { getImageHandler, imageGenerationHandler } from './routes/image';
 import { modelsHandler } from './routes/models';
 
-const { preflight, corsify } = createCors();
+const { preflight, corsify } = cors();
 
 // Create a new router
-const router = Router({ base: '/v1' });
+const router = Router({
+	base: '/v1',
+	before: [withParams], 
+	catch: error, 
+	finally: [json], 
+  })
 
 function extractToken(authorizationHeader) {
 	if (authorizationHeader) {
@@ -54,15 +59,12 @@ router.all('*', () => new Response('404, not found!', { status: 404 }));
 export default {
 	fetch: (request, env, ctx) =>
 		router
-			.handle(request, env, ctx)
+			.fetch(request, env, ctx)
 
 			// catch any errors
-			.catch(e => {
-				console.error(e);
-				return error(e);
-			})
+			.catch(error)
 
 			// add CORS headers to all requests,
 			// including errors
-			.then(corsify),
+			// .then((req, res) => corsify(req, res)) c,
 };

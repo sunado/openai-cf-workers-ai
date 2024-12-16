@@ -11,10 +11,11 @@
 		"test": "vitest"
 	},
 	"dependencies": {
-		"itty-router": "^4.2.2"
+		"image-js": "^0.35.6",
+		"itty-router": "^5.0.18"
 	},
 	"devDependencies": {
-		"vitest": "^0.31.0",
-		"wrangler": "^3.0.0"
+		"vitest": "^0.34.6",
+		"wrangler": "^3.95.0"
 	}
 }

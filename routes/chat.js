@@ -1,3 +1,5 @@
+import { convertBase64ToBlob, to2png } from '../utils/converters';
+
 export const chatHandler = async (request, env) => {
 	let model = '@cf/mistral/mistral-7b-instruct-v0.1';
 	let messages = [];
@@ -77,7 +79,7 @@ export const chatHandler = async (request, env) => {
 						try {
 							if (line.startsWith('data: ')) {
 								const content = line.slice('data: '.length);
-								console.log(content);
+								//console.log(content);
 								const doneflag = content.trim() == '[DONE]';
 								if (doneflag) {
 									controller.enqueue(encoder.encode("data: [DONE]\n\n"));
@@ -114,7 +116,7 @@ export const chatHandler = async (request, env) => {
 
 			let obj = {};
 			if (image) {
-				obj = { stream: json.stream, messages, image: convertBase64ToBlob(image) };
+				obj = { stream: json.stream, messages, image: await to2png(image) };
 			} else {
 				obj = { stream: json.stream, messages };
 			}
@@ -162,29 +164,3 @@ export const chatHandler = async (request, env) => {
 	return Response.json({ error: 'invalid request' }, { status: 400 });
 };
 
-/**
- * Convert BASE64 to BLOB
- * @param base64Image Pass Base64 image data to convert into the BLOB
- */
-function convertBase64ToBlob(base64Image) {
-	// Split into two parts
-	const parts = base64Image.split(';base64,');
-  
-	// Hold the content type
-	const imageType = parts[0].split(':')[1];
-  
-	// Decode Base64 string
-	const decodedData = atob(parts[1]);
-  
-	// Create UNIT8ARRAY of size same as row data length
-	const uInt8Array = new Uint8Array(decodedData.length);
-  
-	// Insert all character code into uInt8Array
-	for (let i = 0; i < decodedData.length; ++i) {
-	  uInt8Array[i] = decodedData.charCodeAt(i);
-	}
-  
-	// Return BLOB image after conversion
-	// return new Blob([uInt8Array], { type: imageType });
-	return Array.from(uInt8Array);
-  }
